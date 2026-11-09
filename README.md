@@ -161,14 +161,14 @@ Jendela utama menyediakan pilihan model AI dan 4 tombol mode input:
 ### Tombol Aksi Input:
 | Tombol | Fungsi & Kegunaan |
 | :--- | :--- |
-| 📷 **Kamera Live** | Tracking kendaraan real-time via webcam/kamera CCTV jalan tol dengan header statistik real-time. |
-| 🖼️ **Upload Foto** | Memilih satu atau beberapa foto kendaraan untuk dideteksi dan otomatis disimpan ke folder `Hasil/`. |
-| 📁 **Upload Video** | Memproses rekaman video lalu lintas secara frame-by-frame dan menyimpan video beranotasi ke folder `Hasil/`. |
-| 🏋️ **Custom Train** | Membuka jendela antarmuka training model (`train.py`) dengan akselerasi NVIDIA Tensor Core. |
+| **Kamera Live** | Tracking kendaraan real-time via webcam/kamera CCTV jalan tol dengan header statistik real-time. |
+| **Upload Foto** | Memilih satu atau beberapa foto kendaraan untuk dideteksi dan otomatis disimpan ke folder `Hasil/`. |
+| **Upload Video** | Memproses rekaman video lalu lintas secara frame-by-frame dan menyimpan video beranotasi ke folder `Hasil/`. |
+| **Custom Train** | Membuka jendela antarmuka training model (`train.py`) dengan akselerasi NVIDIA Tensor Core. |
 
 ---
 
-## 🔄 Logika Smart Fallback & Deteksi Multi-Kendaraan
+## Logika Smart Fallback & Deteksi Multi-Kendaraan
 
 ```
                          Input Frame (Citra / Video)
@@ -199,7 +199,7 @@ Jendela utama menyediakan pilihan model AI dan 4 tombol mode input:
 
 ---
 
-## 📊 Metrik Evaluasi Naskah Jurnal (`Hasil_Uji/`)
+## Metrik Evaluasi Naskah Jurnal (`Hasil_Uji/`)
 
 Setiap kali `evaluate_golongan.py` dijalankan, sistem menghasilkan:
 1. `log_pengujian.csv`: Rincian pengujian per gambar (Ground Truth, Prediksi, Status Benar/Salah, Nilai Confidence, Waktu Inferensi).
