@@ -1,0 +1,18 @@
+Device: 0 | Total benar: 104/120 (86.7%)
+Macro P/R/F1: 0.867/0.848/0.853
+Waktu rata-rata: 22.7 ms/citra (44.1 FPS)
+
+Golongan I    35/35  akurasi 100.0%  CI95 [90.1, 100.0]  P 0.921 R 1.0 F1 0.959
+Golongan II   22/25  akurasi 88.0%  CI95 [70.0, 95.8]  P 0.957 R 0.88 F1 0.917
+Golongan III  9/13  akurasi 69.2%  CI95 [42.4, 87.3]  P 0.6 R 0.692 F1 0.643
+Golongan IV   13/17  akurasi 76.5%  CI95 [52.7, 90.4]  P 0.722 R 0.765 F1 0.743
+Golongan V    15/20  akurasi 75.0%  CI95 [53.1, 88.8]  P 1.0 R 0.75 F1 0.857
+Golongan VI   10/10  akurasi 100.0%  CI95 [72.2, 100.0]  P 1.0 R 1.0 F1 1.0
+
+Confusion matrix (baris=aktual, kolom=Golongan I, Golongan II, Golongan III, Golongan IV, Golongan V, Golongan VI, TD):
+[35, 0, 0, 0, 0, 0, 0]
+[1, 22, 1, 0, 0, 0, 1]
+[1, 0, 9, 3, 0, 0, 0]
+[1, 0, 3, 13, 0, 0, 0]
+[0, 1, 2, 2, 15, 0, 0]
+[0, 0, 0, 0, 0, 10, 0]

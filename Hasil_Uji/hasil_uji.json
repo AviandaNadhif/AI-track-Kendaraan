@@ -1,0 +1,162 @@
+{
+  "device": "0",
+  "total": 120,
+  "benar": 104,
+  "akurasi_total": 86.7,
+  "macro_precision": 0.867,
+  "macro_recall": 0.848,
+  "macro_f1": 0.853,
+  "ms_per_image": 22.7,
+  "fps": 44.1,
+  "confusion_labels": [
+    "Golongan I",
+    "Golongan II",
+    "Golongan III",
+    "Golongan IV",
+    "Golongan V",
+    "Golongan VI",
+    "TD"
+  ],
+  "confusion": [
+    [
+      35,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      22,
+      1,
+      0,
+      0,
+      0,
+      1
+    ],
+    [
+      1,
+      0,
+      9,
+      3,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      3,
+      13,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      2,
+      2,
+      15,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      10,
+      0
+    ]
+  ],
+  "per_golongan": {
+    "Golongan I": {
+      "n": 35,
+      "benar": 35,
+      "salah": 0,
+      "akurasi": 100.0,
+      "ci_low": 90.1,
+      "ci_high": 100.0,
+      "precision": 0.921,
+      "recall": 1.0,
+      "f1": 0.959,
+      "conf_mean": 90.7,
+      "conf_min": 81.1,
+      "conf_max": 97.1
+    },
+    "Golongan II": {
+      "n": 25,
+      "benar": 22,
+      "salah": 3,
+      "akurasi": 88.0,
+      "ci_low": 70.0,
+      "ci_high": 95.8,
+      "precision": 0.957,
+      "recall": 0.88,
+      "f1": 0.917,
+      "conf_mean": 87.5,
+      "conf_min": 72.2,
+      "conf_max": 95.9
+    },
+    "Golongan III": {
+      "n": 13,
+      "benar": 9,
+      "salah": 4,
+      "akurasi": 69.2,
+      "ci_low": 42.4,
+      "ci_high": 87.3,
+      "precision": 0.6,
+      "recall": 0.692,
+      "f1": 0.643,
+      "conf_mean": 79.8,
+      "conf_min": 50.1,
+      "conf_max": 97.5
+    },
+    "Golongan IV": {
+      "n": 17,
+      "benar": 13,
+      "salah": 4,
+      "akurasi": 76.5,
+      "ci_low": 52.7,
+      "ci_high": 90.4,
+      "precision": 0.722,
+      "recall": 0.765,
+      "f1": 0.743,
+      "conf_mean": 83.1,
+      "conf_min": 62.8,
+      "conf_max": 98.9
+    },
+    "Golongan V": {
+      "n": 20,
+      "benar": 15,
+      "salah": 5,
+      "akurasi": 75.0,
+      "ci_low": 53.1,
+      "ci_high": 88.8,
+      "precision": 1.0,
+      "recall": 0.75,
+      "f1": 0.857,
+      "conf_mean": 86.3,
+      "conf_min": 66.4,
+      "conf_max": 96.8
+    },
+    "Golongan VI": {
+      "n": 10,
+      "benar": 10,
+      "salah": 0,
+      "akurasi": 100.0,
+      "ci_low": 72.2,
+      "ci_high": 100.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "conf_mean": 94.5,
+      "conf_min": 92.5,
+      "conf_max": 95.8
+    }
+  }
+}

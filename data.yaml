@@ -1,0 +1,12 @@
+path: c:/Codingan Nadhif/AI_Track_kendaraan_v6
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+names:
+  0: Golongan I
+  1: Golongan II
+  2: Golongan III
+  3: Golongan IV
+  4: Golongan V
+  5: Golongan VI
