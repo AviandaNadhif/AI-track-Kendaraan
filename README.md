@@ -37,8 +37,8 @@ Klasifikasi mengacu pada regulasi penetapan tarif golongan kendaraan jalan tol d
    - Menggunakan mekanisme penyaringan duplikasi fleksibel (`overlap_threshold = 0.60`) untuk mempertahankan banyak kendaraan di jalan raya.
 
 3. **Pilihan Model AI Fleksibel di GUI**:
-   - ⚡ **Model Standar YOLO (yolov8s.pt / yolov8n.pt - Pretrained COCO)**: Deteksi multi-kendaraan dengan kecepatan tinggi dan akurasi tinggi untuk lalu lintas umum.
-   - 🎯 **Model Custom Tol (runs/best.pt + COCO Fallback Golongan VI)**: Model hasil transfer learning mandiri spesialis truk multi-gandar jalan tol (Golongan I–V), dengan integrasi fallback COCO untuk Golongan VI.
+   - **Model Standar YOLO (yolov8s.pt / yolov8n.pt - Pretrained COCO)**: Deteksi multi-kendaraan dengan kecepatan tinggi dan akurasi tinggi untuk lalu lintas umum.
+   - **Model Custom Tol (runs/best.pt + COCO Fallback Golongan VI)**: Model hasil transfer learning mandiri spesialis truk multi-gandar jalan tol (Golongan I–V), dengan integrasi fallback COCO untuk Golongan VI.
 
 4. **Modul Pengujian Terstandarisasi Jurnal (`evaluate_golongan.py`)**:
    - Dirancang untuk pengujian 10 citra uji per golongan (`Dataset_Uji/`, total 60 citra uji independen).
@@ -98,7 +98,7 @@ AI_Track_kendaraan_v6 (Sesuai Jurnal)/
 
 ---
 
-## 📦 Requirements & Instalasi
+## Requirements & Instalasi
 
 Pastikan menggunakan Python 3.10 ke atas. Pasang dependensi:
 
@@ -106,14 +106,14 @@ Pastikan menggunakan Python 3.10 ke atas. Pasang dependensi:
 pip install ultralytics opencv-python numpy splitfolders pillow torch
 ```
 
-> ⚡ **Akselerasi GPU NVIDIA (CUDA):**
+> **Akselerasi GPU NVIDIA (CUDA):**
 > ```powershell
 > pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 > ```
 
 ---
 
-## ⚡ Cara Menjalankan Aplikasi
+## Cara Menjalankan Aplikasi
 
 ### 1. Aplikasi Utama (GUI 4 Mode):
 ```powershell
@@ -150,13 +150,13 @@ python train.py
 
 ---
 
-## 🎛️ Panduan Antarmuka GUI Utama — `Track.py`
+## Panduan Antarmuka GUI Utama — `Track.py`
 
 Jendela utama menyediakan pilihan model AI dan 4 tombol mode input:
 
 ### Pilihan Model AI:
-- **⚡ Model Standar YOLO (yolov8s.pt - Pretrained COCO Multi-Vehicle)**: Menggunakan pemetaan COCO penuh, sangat responsif mendeteksi banyak kendaraan bersamaan (mobil, bus, truk 2 gandar, motor).
-- **🎯 Model Custom Tol (runs/best.pt + Fallback COCO Golongan VI)**: Mengutamakan model lokal hasil training untuk mengenali truk golongan II–V, dilengkapi fallback otomatis ke COCO untuk Golongan VI dan kendaraan konvoi.
+- **Model Standar YOLO (yolov8s.pt - Pretrained COCO Multi-Vehicle)**: Menggunakan pemetaan COCO penuh, sangat responsif mendeteksi banyak kendaraan bersamaan (mobil, bus, truk 2 gandar, motor).
+- **Model Custom Tol (runs/best.pt + Fallback COCO Golongan VI)**: Mengutamakan model lokal hasil training untuk mengenali truk golongan II–V, dilengkapi fallback otomatis ke COCO untuk Golongan VI dan kendaraan konvoi.
 
 ### Tombol Aksi Input:
 | Tombol | Fungsi & Kegunaan |
