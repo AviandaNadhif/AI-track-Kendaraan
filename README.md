@@ -1,10 +1,9 @@
 # AI-track-Kendaraan
 
-## bisa memilih memakai 
+## Bisa memilih memakai 
 1. COCO default
 2. Mode Custom (golongan VI COCO default)
 
-# AI Track Kendaraan (Golongan I - VI)
 
 Aplikasi **deteksi, klasifikasi, dan tracking kendaraan** berstandar **Golongan I - VI Jalan Tol Indonesia** berbasis **YOLOv8 Object Detection** dari Ultralytics.
 
