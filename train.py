@@ -63,9 +63,9 @@ GOLONGAN_MAP = {
     "Golongan VI": 5,
 }
 
-# ═══════════════════════════════════════════════════════════════════════
+# -----------------------------------------------------------------------
 #   AUTO-RECOVERY: Rebuild train/ dan valid/ jika hilang
-# ═══════════════════════════════════════════════════════════════════════
+# -----------------------------------------------------------------------
 
 DATA_YAML_TEMPLATE = """path: {root_path}
 train: ../train/images
@@ -161,7 +161,7 @@ def rebuild_dataset_from_sources(log_callback=print):
     exts = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.avif')
     total_restored = 0
 
-    # ── SUMBER 1: Dataset_Original (Roboflow backup) ──────────────────
+    # -- SUMBER 1: Dataset_Original (Roboflow backup) --────────────────
     if os.path.exists(original_dir):
         log_callback("\n[1/3] Mengembalikan data Roboflow dari Dataset_Original/...")
         for split_name, dst_img, dst_lbl in [
@@ -190,7 +190,7 @@ def rebuild_dataset_from_sources(log_callback=print):
         log_callback("\n[1/3] Dataset_Original/ tidak ditemukan — skip data Roboflow.")
         log_callback("      (Training hanya dari gambar custom di Dataset/)")
 
-    # ── SUMBER 2: Dataset/ (gambar custom per Golongan ke train & valid) ─────────
+    # -- SUMBER 2: Dataset/ (gambar custom per Golongan ke train & valid) --───────
     if os.path.exists(dataset_dir):
         log_callback("\n[2/3] Mendaftarkan gambar custom dari Dataset/...")
         custom_count = 0
@@ -230,7 +230,7 @@ def rebuild_dataset_from_sources(log_callback=print):
     else:
         log_callback("\n[2/3] Dataset/ tidak ditemukan — tidak ada gambar custom.")
 
-    # ── SUMBER 3: Dataset_Uji/ (gambar uji custom per Golongan ke test/) ─────────
+    # -- SUMBER 3: Dataset_Uji/ (gambar uji custom per Golongan ke test/) --───────
     if os.path.exists(dataset_uji_dir):
         log_callback("\n[3/3] Mendaftarkan gambar uji dari Dataset_Uji/ ke test/...")
         uji_count = 0
@@ -260,7 +260,7 @@ def rebuild_dataset_from_sources(log_callback=print):
     else:
         log_callback("\n[3/3] Dataset_Uji/ tidak ditemukan — skip gambar uji custom.")
 
-    # ── Regenerasi data.yaml jika hilang ──────────────────────────────
+    # -- Regenerasi data.yaml jika hilang --────────────────────────────
     yaml_path = os.path.join(root_dir, "data.yaml")
     if not os.path.exists(yaml_path):
         generate_data_yaml(root_dir, log_callback)
@@ -275,7 +275,7 @@ def rebuild_dataset_from_sources(log_callback=print):
             os.remove(cache_file)
             log_callback(f"   Cache lama dihapus: {os.path.basename(cache_file)}")
 
-    log_callback(f"\n[✓] REBUILD SELESAI! Total {total_restored} gambar siap untuk dataset YOLO.")
+    log_callback(f"\n[OK] REBUILD SELESAI! Total {total_restored} gambar siap untuk dataset YOLO.")
     log_callback("=" * 60)
     return total_restored
 
@@ -524,7 +524,7 @@ def _print_per_class_accuracy(model_path: str, split_dir: str, log_callback=prin
             c = correct[g]
             pct = (c / t * 100) if t > 0 else 0
             bar = '█' * int(pct / 5) + '░' * (20 - int(pct / 5))
-            status = '✓' if pct >= 70 else ('⚠' if pct >= 50 else '✗')
+            status = 'OK' if pct >= 70 else ('WARN' if pct >= 50 else 'KURANG')
             log_callback(f"│ {status} {g:<13} {bar} {pct:5.1f}% ({c}/{t})")
         log_callback("└─────────────────────────────────────────┘")
     except Exception as e:
@@ -570,7 +570,7 @@ def get_hardware_acceleration_info():
             pass
 
         info["status_code"] = "cuda_ready"
-        info["message"] = f"🟢 CUDA & Tensor Core Aktif: {info['device_name']}"
+        info["message"] = f"[INFO] CUDA & Tensor Core Aktif: {info['device_name']}"
         return info
 
     # Jika torch.cuda.is_available() False, periksa GPU NVIDIA fisik via nvidia-smi
@@ -585,12 +585,12 @@ def get_hardware_acceleration_info():
             info["smi_name"] = first_line
             info["device_name"] = first_line
             info["status_code"] = "gpu_present_cpu_torch"
-            info["message"] = f"⚠️ GPU Terdeteksi: {first_line} (PyTorch build CPU terpasang)"
+            info["message"] = f"[!] GPU Terdeteksi: {first_line} (PyTorch build CPU terpasang)"
             return info
     except Exception:
         pass
 
-    info["message"] = "ℹ️ Menggunakan CPU (CUDA GPU tidak terdeteksi)"
+    info["message"] = "[INFO] Menggunakan CPU (CUDA GPU tidak terdeteksi)"
     return info
 
 
@@ -606,7 +606,7 @@ def setup_tensor_core_environment(enable_tc=True, log_callback=print):
         if hw["smi_detected"]:
             log_callback(f"[!] GPU Fisik Terdeteksi: {hw['smi_name']}")
             log_callback("    [!] PyTorch yang aktif saat ini adalah build CPU (torch.cuda.is_available() = False).")
-            log_callback("    [💡] Untuk mengaktifkan akselerasi Tensor Core penuh di PyTorch:")
+            log_callback("    [INFO] Untuk mengaktifkan akselerasi Tensor Core penuh di PyTorch:")
             log_callback("         pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu126")
             log_callback("    [i] Melanjutkan training dengan fallback CPU (device='cpu').")
         else:
@@ -622,7 +622,7 @@ def setup_tensor_core_environment(enable_tc=True, log_callback=print):
     cc_str = f"{cc[0]}.{cc[1]}" if cc else "Unknown"
 
     log_callback("=" * 65)
-    log_callback(f"[⚡] MENGAKTIFKAN AKSELERASI NVIDIA TENSOR CORE")
+    log_callback(f"[INFO] MENGAKTIFKAN AKSELERASI NVIDIA TENSOR CORE")
     log_callback(f"    GPU           : {device_name} (Compute Capability: {cc_str})")
     if hw["tc_generation"]:
         log_callback(f"    Arsitektur    : {hw['tc_generation']}")
@@ -630,22 +630,22 @@ def setup_tensor_core_environment(enable_tc=True, log_callback=print):
     # 1. Aktifkan TensorFloat-32 (TF32) pada Tensor Core (Ampere RTX 30xx / Ada RTX 40xx)
     try:
         torch.set_float32_matmul_precision('high')
-        log_callback("    [✓] torch.set_float32_matmul_precision('high') -> TF32 Aktif")
+        log_callback("    [OK] torch.set_float32_matmul_precision('high') -> TF32 Aktif")
     except Exception as e:
         log_callback(f"    [~] Matmul precision note: {e}")
 
     if hasattr(torch.backends.cuda.matmul, 'allow_tf32'):
         torch.backends.cuda.matmul.allow_tf32 = True
-        log_callback("    [✓] torch.backends.cuda.matmul.allow_tf32 = True")
+        log_callback("    [OK] torch.backends.cuda.matmul.allow_tf32 = True")
 
     if hasattr(torch.backends.cudnn, 'allow_tf32'):
         torch.backends.cudnn.allow_tf32 = True
-        log_callback("    [✓] torch.backends.cudnn.allow_tf32 = True")
+        log_callback("    [OK] torch.backends.cudnn.allow_tf32 = True")
 
     # 2. cuDNN Benchmark untuk auto-tuner konvolusi optimal di Tensor Core
     torch.backends.cudnn.benchmark = True
-    log_callback("    [✓] torch.backends.cudnn.benchmark = True (Optimalisasi GEMM/Conv)")
-    log_callback("    [✓] Automatic Mixed Precision (AMP): FP16 Tensor Cores diaktifkan")
+    log_callback("    [OK] torch.backends.cudnn.benchmark = True (Optimalisasi GEMM/Conv)")
+    log_callback("    [OK] Automatic Mixed Precision (AMP): FP16 Tensor Cores diaktifkan")
     log_callback("=" * 65)
 
     return 0, True
@@ -661,13 +661,13 @@ def start_training(epochs=80, log_callback=print, model_size='s', use_tensor_cor
 
     if not os.path.exists(yaml_path):
         log_callback(f"[!] File data.yaml tidak ditemukan di: {yaml_path}")
-        log_callback("    Gunakan tombol '🔄 Recovery Dataset' untuk rebuild dataset terlebih dahulu.")
+        log_callback("    Gunakan tombol 'Recovery Dataset' untuk rebuild dataset terlebih dahulu.")
         return
 
     # Cek apakah train/valid ada
     if not _is_dataset_intact(root_dir):
         log_callback("[!] Dataset YOLO (train/valid) tidak lengkap atau kosong!")
-        log_callback("    Gunakan tombol '🔄 Recovery Dataset' untuk rebuild dataset dari backup.")
+        log_callback("    Gunakan tombol 'Recovery Dataset' untuk rebuild dataset dari backup.")
         return
 
     # 1. Sinkronisasi data custom dari folder Dataset/ dan Dataset_Uji/ jika ada penambahan file baru
@@ -790,7 +790,7 @@ def _golongan_picker(root, on_confirm_cb, default_gol="Golongan I"):
 
     tk.Button(
         btn_box,
-        text="✓ Konfirmasi",
+        text="[OK] Konfirmasi",
         bg="#FF9800",
         fg="white",
         font=("Segoe UI", 10, "bold"),
@@ -835,15 +835,15 @@ def show_train_gui():
 
     tk.Label(
         root,
-        text="🏋️  Training Custom Model YOLO (Golongan I - VI)",
+        text=" Training Custom Model YOLO (Golongan I - VI)",
         font=("Segoe UI", 13, "bold"),
         bg="#0d0f1a", fg="#00d4ff",
     ).pack(pady=(12, 2))
 
-    # ── Deteksi Hardware Awal ─────────────────────────────────────────
+    # -- Deteksi Hardware Awal --───────────────────────────────────────
     hw_info = get_hardware_acceleration_info()
 
-    # ── Baris Parameter Epoch & Model ─────────────────────────────────
+    # -- Baris Parameter Epoch & Model --───────────────────────────────
     param_frame = tk.Frame(root, bg="#0d0f1a")
     param_frame.pack(pady=3)
 
@@ -864,14 +864,14 @@ def show_train_gui():
             activebackground="#0d0f1a", font=("Segoe UI", 9),
         ).grid(row=0, column=3 + ["n", "s", "m"].index(val), padx=3)
 
-    # ── Baris Opsi Akselerasi NVIDIA Tensor Core ──────────────────────
+    # -- Baris Opsi Akselerasi NVIDIA Tensor Core --────────────────────
     tc_frame = tk.Frame(root, bg="#12162a", padx=8, pady=4, relief=tk.FLAT)
     tc_frame.pack(fill=tk.X, padx=20, pady=4)
 
     tc_var = tk.BooleanVar(value=True)
     chk_tc = tk.Checkbutton(
         tc_frame,
-        text="⚡ Gunakan NVIDIA Tensor Core (TF32 & FP16 Mixed Precision)",
+        text="Gunakan NVIDIA Tensor Core (TF32 & FP16 Mixed Precision)",
         variable=tc_var,
         bg="#12162a", fg="#00d4ff", selectcolor="#1a1f35",
         activebackground="#12162a", activeforeground="#00d4ff",
@@ -888,7 +888,7 @@ def show_train_gui():
         info_win.eval('tk::PlaceWindow . center')
 
         title_lbl = tk.Label(
-            info_win, text="⚡ Status NVIDIA Tensor Core",
+            info_win, text="Status NVIDIA Tensor Core",
             font=("Segoe UI", 12, "bold"), bg="#0d0f1a", fg="#00d4ff"
         )
         title_lbl.pack(pady=10)
@@ -904,16 +904,16 @@ def show_train_gui():
         )
         if not current_hw['cuda_available'] and current_hw['smi_detected']:
             detail_text += (
-                "💡 CATATAN INSTALASI:\n"
+                "[INFO] CATATAN INSTALASI:\n"
                 "GPU NVIDIA RTX 3050 Anda terdeteksi dengan baik!\n"
                 "Untuk mengaktifkan CUDA pada PyTorch 3.14 di Windows, jalankan:\n\n"
                 "pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu126\n\n"
                 "Setelah itu, training YOLO akan otomatis langsung menggunakan Tensor Core."
             )
         elif current_hw['cuda_available']:
-            detail_text += "✅ Sistem 100% siap melatih dengan NVIDIA Tensor Core!"
+            detail_text += "[OK] Sistem 100% siap melatih dengan NVIDIA Tensor Core!"
         else:
-            detail_text += "ℹ️ Sistem saat ini menggunakan akselerasi CPU."
+            detail_text += "[INFO] Sistem saat ini menggunakan akselerasi CPU."
 
         msg_box = tk.Text(
             info_win, height=12, width=60, font=("Consolas", 9),
@@ -930,19 +930,19 @@ def show_train_gui():
         ).pack(pady=10)
 
     btn_tc_info = tk.Button(
-        tc_frame, text="ℹ️ Status GPU",
+        tc_frame, text="[INFO] Status GPU",
         font=("Segoe UI", 8), bg="#2a3050", fg="#f0f4ff",
         relief=tk.FLAT, padx=6, pady=2, cursor="hand2", command=show_tensor_core_info
     )
     btn_tc_info.pack(side=tk.RIGHT)
 
-    # ── Baris Pilihan Golongan Target ─────────────────────────────────
+    # -- Baris Pilihan Golongan Target --───────────────────────────────
     gol_frame = tk.Frame(root, bg="#12162a", padx=10, pady=5, relief=tk.FLAT)
     gol_frame.pack(fill=tk.X, padx=20, pady=4)
 
     tk.Label(
         gol_frame,
-        text="🎯 Target Golongan (untuk Tambah Foto / Video):",
+        text="Target Golongan (untuk Tambah Foto / Video):",
         bg="#12162a", fg="#00d4ff",
         font=("Segoe UI", 9, "bold")
     ).pack(side=tk.LEFT, padx=(0, 10))
@@ -1078,8 +1078,8 @@ def show_train_gui():
             # Rebuild dari sumber
             rebuilt = rebuild_dataset_from_sources(log_callback=log)
             if rebuilt > 0:
-                log("\n[✓] Recovery selesai! Dataset siap untuk training.")
-                log("    Klik '🚀 Mulai Training YOLO' untuk melatih model.")
+                log("\n[OK] Recovery selesai! Dataset siap untuk training.")
+                log("    Klik 'Mulai Training YOLO' untuk melatih model.")
             else:
                 log("\n[!] Recovery gagal — tidak ada data sumber.")
                 log("    Pastikan Dataset/ atau Dataset_Original/ berisi data.")
@@ -1090,7 +1090,7 @@ def show_train_gui():
     btn_frame.pack(pady=4)
 
     btn_train = tk.Button(
-        btn_frame, text="🚀 Mulai Training YOLO",
+        btn_frame, text="Mulai Training YOLO",
         font=("Segoe UI", 9, "bold"), bg="#FF9800", fg="white",
         relief=tk.FLAT, padx=12, pady=6, cursor="hand2", command=on_start,
     )
@@ -1098,7 +1098,7 @@ def show_train_gui():
     all_btns.append(btn_train)
 
     btn_foto = tk.Button(
-        btn_frame, text="🖼️ Tambah Foto & Train",
+        btn_frame, text="Tambah Foto & Train",
         font=("Segoe UI", 9, "bold"), bg="#9C27B0", fg="white",
         relief=tk.FLAT, padx=12, pady=6, cursor="hand2", command=on_foto_train,
     )
@@ -1106,19 +1106,19 @@ def show_train_gui():
     all_btns.append(btn_foto)
 
     btn_video = tk.Button(
-        btn_frame, text="🎥 Ekstrak Video & Train",
+        btn_frame, text="Ekstrak Video & Train",
         font=("Segoe UI", 9, "bold"), bg="#E91E63", fg="white",
         relief=tk.FLAT, padx=12, pady=6, cursor="hand2", command=on_video_train,
     )
     btn_video.grid(row=0, column=2, padx=6)
     all_btns.append(btn_video)
 
-    # ── Baris tombol kedua: Recovery ──────────────────────────────────
+    # -- Baris tombol kedua: Recovery --────────────────────────────────
     btn_frame2 = tk.Frame(root, bg="#0d0f1a")
     btn_frame2.pack(pady=2)
 
     btn_recovery = tk.Button(
-        btn_frame2, text="🔄 Recovery Dataset",
+        btn_frame2, text="Recovery Dataset",
         font=("Segoe UI", 9, "bold"), bg="#00897B", fg="white",
         relief=tk.FLAT, padx=12, pady=5, cursor="hand2", command=on_recovery,
     )

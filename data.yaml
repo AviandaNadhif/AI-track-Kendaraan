@@ -1,4 +1,4 @@
-path: c:/Codingan Nadhif/AI_Track_kendaraan_v6
+path: c:/Codingan Nadhif/AI-track-Kendaraan_Final
 train: ../train/images
 val: ../valid/images
 test: ../test/images

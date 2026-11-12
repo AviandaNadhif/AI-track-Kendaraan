@@ -4,8 +4,28 @@ import numpy as np
 import train
 from ultralytics import YOLO
 
+# Sinkronkan path data.yaml ke lokasi folder saat ini agar portabel di path mana saja
+def sync_data_yaml_path():
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    yaml_path = os.path.join(root_dir, "data.yaml")
+    if os.path.exists(yaml_path):
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            root_unix = root_dir.replace("\\", "/")
+            if lines and lines[0].startswith("path:"):
+                current_p = lines[0].split("path:", 1)[1].strip()
+                if current_p != root_unix:
+                    lines[0] = f"path: {root_unix}\n"
+                    with open(yaml_path, "w", encoding="utf-8") as f:
+                        f.writelines(lines)
+        except Exception:
+            pass
+
+sync_data_yaml_path()
+
 # Direktori output hasil deteksi
-HASIL_DIR = os.path.join(os.path.dirname(__file__), "Hasil")
+HASIL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Hasil")
 
 # Daftar Golongan Kendaraan di Indonesia (Golongan I - VI)
 CLASSES = [
@@ -67,7 +87,7 @@ _COCO_FALLBACK_MODEL = None
 
 def get_coco_fallback_model():
     """
-    Load dan cache model COCO pretrained (yolov8s/yolov8n)
+    Load dan cache model COCO pretrained (yolov8s/yolov8n) dari folder coco_model/
     khusus untuk fallback Golongan VI (sepeda motor / roda 2)
     serta membantu deteksi banyak kendaraan (multi-vehicle) secara presisi seperti di v4.
     """
@@ -75,12 +95,14 @@ def get_coco_fallback_model():
     if _COCO_FALLBACK_MODEL is not None:
         return _COCO_FALLBACK_MODEL
 
-    root_dir = os.path.dirname(__file__)
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    coco_dir = os.path.join(root_dir, "coco_model")
     cand_coco = [
-        os.path.join(os.path.dirname(root_dir), "yolov8s.pt"),
-        os.path.join(os.path.dirname(root_dir), "yolov8n.pt"),
-        r"c:\Codingan Nadhif\yolov8s.pt",
-        r"c:\Codingan Nadhif\yolov8n.pt",
+        os.path.join(coco_dir, "yolov8s.pt"),
+        os.path.join(coco_dir, "yolov8n.pt"),
+        os.path.join(coco_dir, "best.pt"),
+        os.path.join(root_dir, "yolov8s.pt"),
+        os.path.join(root_dir, "yolov8n.pt"),
         "yolov8s.pt",
         "yolov8n.pt"
     ]
@@ -112,32 +134,34 @@ def get_classifier_model():
     """Deteksi dan klasifikasi Golongan I - VI terintegrasi langsung pada model YOLOv8."""
     return None, None
 
-def get_detector_model(model_mode="auto"):
+def get_detector_model(model_mode="default"):
     """
     Load model detektor YOLOv8:
     model_mode:
-      - 'auto'   : Cek runs/best.pt, jika tidak ada fallback ke model standar COCO.
+      - 'default' / 'base' / 'coco' : Menggunakan model default di folder coco_model/ (yolov8s.pt).
       - 'custom' : Menggunakan runs/best.pt hasil training lokal (dilengkapi COCO fallback).
-      - 'base'   : Menggunakan yolov8s.pt / yolov8n.pt pretrained COCO (mendeteksi multi-kendaraan dengan presisi tinggi).
+      - 'auto'   : Menggunakan model default di folder coco_model/ sebagai prioritas utama.
     """
-    root_dir = os.path.dirname(__file__)
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    coco_dir = os.path.join(root_dir, "coco_model")
 
-    # 1. JIKA USER MEMILIH MODEL BASE / STANDAR SECARA EKSPLISIT
-    if model_mode in ["base", "coco", "default"]:
-        cand_base = [
-            os.path.join(os.path.dirname(root_dir), "yolov8s.pt"),
-            os.path.join(os.path.dirname(root_dir), "yolov8n.pt"),
-            r"c:\Codingan Nadhif\yolov8s.pt",
-            r"c:\Codingan Nadhif\yolov8n.pt",
+    # 1. JIKA MENGGUNAKAN MODE DEFAULT / BASE / COCO / AUTO
+    if model_mode in ["default", "base", "coco", "auto"]:
+        cand_default = [
+            os.path.join(coco_dir, "yolov8s.pt"),
+            os.path.join(coco_dir, "yolov8n.pt"),
+            os.path.join(coco_dir, "best.pt"),
+            os.path.join(root_dir, "yolov8s.pt"),
+            os.path.join(root_dir, "yolov8n.pt"),
             "yolov8s.pt",
             "yolov8n.pt"
         ]
-        for cp in cand_base:
+        for cp in cand_default:
             if os.path.exists(cp):
                 try:
                     m = YOLO(cp)
                     if 'motorcycle' in m.names.values():
-                        print(f"[+] Loaded Model Dasar Pretrained COCO (Multi-Vehicle): {cp}")
+                        print(f"[+] Loaded Model Default dari coco_model: {cp}")
                         return m
                 except Exception:
                     pass
@@ -147,7 +171,7 @@ def get_detector_model(model_mode="auto"):
             return YOLO("yolov8n.pt")
 
     # 2. PRIORITAS CUSTOM (runs/best.pt)
-    if model_mode in ["auto", "custom"]:
+    if model_mode in ["custom"]:
         runs_dir = os.path.join(root_dir, "runs")
         if os.path.exists(runs_dir):
             best_files = []
@@ -176,22 +200,28 @@ def get_detector_model(model_mode="auto"):
             except Exception as e:
                 print(f"[!] Gagal me-load best.pt dari root: {e}")
 
-    # Fallback ke model dasar pretrained COCO
-    cand_base = [
-        os.path.join(os.path.dirname(root_dir), "yolov8s.pt"),
-        os.path.join(os.path.dirname(root_dir), "yolov8n.pt"),
-        r"c:\Codingan Nadhif\yolov8s.pt",
-        r"c:\Codingan Nadhif\yolov8n.pt",
-        "yolov8s.pt",
-        "yolov8n.pt"
+        root_custom_s = os.path.join(root_dir, "yolov8s.pt")
+        if os.path.exists(root_custom_s):
+            try:
+                m = YOLO(root_custom_s)
+                print(f"[+] Loaded Model Custom yolov8s dari root: {root_custom_s}")
+                return m
+            except Exception:
+                pass
+
+    # Fallback ke model dasar di coco_model/
+    cand_fb = [
+        os.path.join(coco_dir, "yolov8s.pt"),
+        os.path.join(coco_dir, "yolov8n.pt"),
+        os.path.join(root_dir, "yolov8s.pt"),
+        "yolov8s.pt"
     ]
-    for cp in cand_base:
+    for cp in cand_fb:
         if os.path.exists(cp):
             try:
                 m = YOLO(cp)
-                if 'motorcycle' in m.names.values():
-                    print(f"[+] Loaded Detector Model (COCO Mode): {cp}")
-                    return m
+                print(f"[+] Loaded Model Fallback (coco_model): {cp}")
+                return m
             except Exception:
                 pass
 
@@ -355,7 +385,7 @@ def draw_vehicle_boxes(detector, classifier, frame, conf=0.15, overlap_threshold
                 "source": "custom" if is_custom_model else "coco"
             })
 
-    # ── FALLBACK KE COCO KHUSUS GOLONGAN VI & SCAN BANYAK KENDARAAN ──────
+    # --- FALLBACK KE COCO KHUSUS GOLONGAN VI & SCAN BANYAK KENDARAAN ---
     # Jika menggunakan Model Custom, aktifkan fallback ke COCO pretrained:
     # 1. Golongan VI (sepeda motor / roda 2) digantikan atau ditambahkan dari COCO
     #    agar bounding box rapi & presisi seperti di v4.
@@ -465,7 +495,7 @@ def draw_header_overlay(frame, stats, is_custom_model=False):
     cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
 
     total_count = sum(stats.values())
-    status_str = "Model Custom" if is_custom_model else "Model YOLOv8 Default (COCO Mode)"
+    status_str = "Model Custom (+ COCO Fallback Gol VI)" if is_custom_model else "Model Default (coco_model/yolov8s.pt)"
 
     # Header Bar Row 1: Total & Status Mode
     title_txt = f"TOTAL DETEKSI: {total_count} Kendaraan | Mode: {status_str}"
@@ -480,7 +510,7 @@ def draw_header_overlay(frame, stats, is_custom_model=False):
     summary_txt = " | ".join(summary_parts)
     cv2.putText(frame, summary_txt, (10, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-def process_video(source, save_output=False, model_mode="auto"):
+def process_video(source, save_output=False, model_mode="default"):
     """Proses deteksi & tracking kendaraan pada Video / Kamera live."""
     detector = get_detector_model(model_mode=model_mode)
     classifier, model_path = get_classifier_model()
@@ -528,7 +558,7 @@ def process_video(source, save_output=False, model_mode="auto"):
         writer.release()
     cv2.destroyAllWindows()
 
-def process_image(image_paths, save_output=True, model_mode="auto"):
+def process_image(image_paths, save_output=True, model_mode="default"):
     """Proses deteksi & tracking kendaraan pada satu atau beberapa Foto."""
     detector = get_detector_model(model_mode=model_mode)
     classifier, model_path = get_classifier_model()
@@ -568,23 +598,23 @@ def show_gui():
     root.geometry("700x260")
     root.eval('tk::PlaceWindow . center')
 
-    tk.Label(root, text="🚗 AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
+    tk.Label(root, text="AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
 
-    # ── Pilihan Model ─────────────────────────────────────────────
+    # --- Pilihan Model ---
     mode_frame = tk.LabelFrame(root, text=" Pilihan Model AI ", font=("Arial", 9, "bold"), fg="#1976D2")
     mode_frame.pack(pady=4, padx=20, fill=tk.X)
 
-    model_var = tk.StringVar(value="base")
+    model_var = tk.StringVar(value="default")
     r1 = tk.Radiobutton(
         mode_frame,
-        text="⚡ Model Standar YOLO (yolov8s.pt - Deteksi Banyak Kendaraan Presisi COCO)",
-        variable=model_var, value="base", font=("Arial", 9, "bold"), fg="#2E7D32"
+        text="Model Default (coco_model/yolov8s.pt - Deteksi Banyak Kendaraan Presisi COCO)",
+        variable=model_var, value="default", font=("Arial", 9, "bold"), fg="#2E7D32"
     )
     r1.pack(anchor=tk.W, padx=12, pady=2)
 
     r2 = tk.Radiobutton(
         mode_frame,
-        text="🎯 Model Custom Tol (runs/best.pt - Hasil Training Mandiri + COCO Fallback Golongan VI)",
+        text="Model Custom Tol (runs/best.pt - Hasil Training Mandiri + COCO Fallback Golongan VI)",
         variable=model_var, value="custom", font=("Arial", 9)
     )
     r2.pack(anchor=tk.W, padx=12, pady=2)
@@ -623,10 +653,10 @@ def show_gui():
     btn_frame = tk.Frame(root)
     btn_frame.pack(pady=8)
 
-    tk.Button(btn_frame, text="📷 Kamera Live",  font=("Arial", 10, "bold"), width=15, command=on_camera,       bg="#4CAF50", fg="white").grid(row=0, column=0, padx=5)
-    tk.Button(btn_frame, text="🖼️ Upload Foto",   font=("Arial", 10, "bold"), width=15, command=on_upload_image, bg="#9C27B0", fg="white").grid(row=0, column=1, padx=5)
-    tk.Button(btn_frame, text="📁 Upload Video",  font=("Arial", 10, "bold"), width=15, command=on_upload,       bg="#2196F3", fg="white").grid(row=0, column=2, padx=5)
-    tk.Button(btn_frame, text="🏋️ Custom Train",  font=("Arial", 10, "bold"), width=15, command=on_train,        bg="#FF9800", fg="white").grid(row=0, column=3, padx=5)
+    tk.Button(btn_frame, text="Kamera Live",  font=("Arial", 10, "bold"), width=15, command=on_camera,       bg="#4CAF50", fg="white").grid(row=0, column=0, padx=5)
+    tk.Button(btn_frame, text="Upload Foto",   font=("Arial", 10, "bold"), width=15, command=on_upload_image, bg="#9C27B0", fg="white").grid(row=0, column=1, padx=5)
+    tk.Button(btn_frame, text="Upload Video",  font=("Arial", 10, "bold"), width=15, command=on_upload,       bg="#2196F3", fg="white").grid(row=0, column=2, padx=5)
+    tk.Button(btn_frame, text="Custom Train",  font=("Arial", 10, "bold"), width=15, command=on_train,        bg="#FF9800", fg="white").grid(row=0, column=3, padx=5)
 
     root.mainloop()
 

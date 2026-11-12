@@ -3,7 +3,7 @@ CameraDetect.py
 ===============
 Mode Foto dari Kamera:
   - Tampilkan live preview webcam
-  - Tekan SPASI atau klik tombol [📸 Ambil Foto] untuk capture
+  - Tekan SPASI atau klik tombol [Ambil Foto] untuk capture
   - Sistem langsung mendeteksi golongan kendaraan dari foto tersebut
   - Hasil foto tersimpan di folder Hasil/
   - Dapat capture berkali-kali tanpa menutup jendela
@@ -91,30 +91,30 @@ class CameraDetectApp:
     # ------------------------------------------------------------------
     def _build_gui(self):
         self.root = tk.Tk()
-        self.root.title("📸 Deteksi Golongan Kendaraan via Foto Kamera")
+        self.root.title("Deteksi Golongan Kendaraan via Foto Kamera")
         self.root.configure(bg=BG_DARK)
         self.root.resizable(True, True)
 
-        # ── Judul ──────────────────────────────────────────────────────
+        # --- Judul ---
         title_frame = tk.Frame(self.root, bg=BG_DARK)
         title_frame.pack(fill=tk.X, padx=20, pady=(18, 5))
 
         tk.Label(
             title_frame,
-            text="📸  Deteksi Golongan Kendaraan",
+            text="Deteksi Golongan Kendaraan",
             font=("Segoe UI", 17, "bold"),
             bg=BG_DARK, fg=ACCENT,
         ).pack(side=tk.LEFT)
 
         self.lbl_mode = tk.Label(
             title_frame,
-            text="● Memuat model...",
+            text="Memuat model...",
             font=("Segoe UI", 9),
             bg=BG_DARK, fg=TEXT_SEC,
         )
         self.lbl_mode.pack(side=tk.RIGHT, padx=4)
 
-        # ── Area Utama (preview kiri | hasil kanan) ───────────────────
+        # --- Area Utama (preview kiri | hasil kanan) ---
         main_frame = tk.Frame(self.root, bg=BG_DARK)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=5)
 
@@ -123,7 +123,7 @@ class CameraDetectApp:
         left.grid(row=0, column=0, padx=(0, 8), pady=0, sticky="nsew")
         main_frame.columnconfigure(0, weight=3)
 
-        tk.Label(left, text="🎥  Preview Kamera", font=("Segoe UI", 10, "bold"),
+        tk.Label(left, text="Preview Kamera", font=("Segoe UI", 10, "bold"),
                  bg=BG_CARD, fg=TEXT_SEC).pack(anchor=tk.W, padx=12, pady=(10, 4))
 
         self.canvas_preview = tk.Canvas(
@@ -141,7 +141,7 @@ class CameraDetectApp:
         right.grid(row=0, column=1, padx=(8, 0), pady=0, sticky="nsew")
         main_frame.columnconfigure(1, weight=3)
 
-        tk.Label(right, text="🔍  Hasil Deteksi", font=("Segoe UI", 10, "bold"),
+        tk.Label(right, text="Hasil Deteksi", font=("Segoe UI", 10, "bold"),
                  bg=BG_CARD, fg=TEXT_SEC).pack(anchor=tk.W, padx=12, pady=(10, 4))
 
         self.canvas_result = tk.Canvas(
@@ -154,7 +154,7 @@ class CameraDetectApp:
             fill=TEXT_SEC, font=("Segoe UI", 11), tags="placeholder"
         )
 
-        # ── Panel Info Golongan (kanan bawah) ─────────────────────────
+        # --- Panel Info Golongan (kanan bawah) ---
         info_outer = tk.Frame(right, bg=BG_CARD)
         info_outer.pack(fill=tk.X, padx=12, pady=(0, 10))
 
@@ -179,10 +179,10 @@ class CameraDetectApp:
             lbl_cnt.pack()
             self.stat_labels[gol] = lbl_cnt
 
-        # ── Rincian Golongan Terbanyak ─────────────────────────────────
+        # --- Rincian Golongan Terbanyak ---
         self.lbl_result_detail = tk.Label(
             right,
-            text="—",
+            text="-",
             font=("Segoe UI", 11, "bold"),
             bg=BG_CARD, fg=ACCENT,
             wraplength=460,
@@ -190,14 +190,14 @@ class CameraDetectApp:
         )
         self.lbl_result_detail.pack(pady=(2, 10))
 
-        # ── Panel Kontrol ──────────────────────────────────────────────
+        # --- Panel Kontrol ---
         ctrl_frame = tk.Frame(self.root, bg=BG_DARK)
         ctrl_frame.pack(fill=tk.X, padx=20, pady=(5, 18))
 
         # Tombol Ambil Foto
         self.btn_capture = tk.Button(
             ctrl_frame,
-            text="📸  Ambil & Deteksi Foto",
+            text="Ambil & Deteksi Foto",
             font=("Segoe UI", 13, "bold"),
             bg=ACCENT2, fg="white",
             activebackground="#5b21b6",
@@ -213,7 +213,7 @@ class CameraDetectApp:
         # Hint keyboard
         tk.Label(
             ctrl_frame,
-            text="Atau tekan  SPASI  untuk ambil foto",
+            text="Atau tekan SPASI untuk ambil foto",
             font=("Segoe UI", 9),
             bg=BG_DARK, fg=TEXT_SEC,
         ).pack(side=tk.LEFT)
@@ -221,7 +221,7 @@ class CameraDetectApp:
         # Tombol Simpan
         self.btn_save = tk.Button(
             ctrl_frame,
-            text="💾  Simpan Hasil",
+            text="Simpan Hasil",
             font=("Segoe UI", 10),
             bg=BG_PANEL, fg=TEXT_SEC,
             activebackground=BG_CARD,
@@ -236,7 +236,7 @@ class CameraDetectApp:
         # Tombol Tutup
         tk.Button(
             ctrl_frame,
-            text="✕  Tutup",
+            text="Tutup",
             font=("Segoe UI", 10),
             bg=BG_PANEL, fg=DANGER,
             activebackground=BG_CARD,
@@ -246,10 +246,10 @@ class CameraDetectApp:
             command=self._on_close,
         ).pack(side=tk.RIGHT, padx=(10, 0))
 
-        # ── Status Bar ──────────────────────────────────────────────────
+        # --- Status Bar ---
         self.lbl_status = tk.Label(
             self.root,
-            text="⏳ Memuat model AI, harap tunggu...",
+            text="Memuat model AI, harap tunggu...",
             font=("Segoe UI", 9),
             bg="#0a0d1a", fg=TEXT_SEC,
             anchor=tk.W,
@@ -271,11 +271,11 @@ class CameraDetectApp:
     # ------------------------------------------------------------------
     def _load_models(self):
         def _load():
-            self._set_status("⏳ Memuat model detektor default YOLOv8...")
+            self._set_status("Memuat model detektor default YOLOv8...")
             try:
                 self.detector = get_detector_model()
             except Exception as e:
-                self._set_status(f"❌ Gagal memuat detector: {e}")
+                self._set_status(f"[!] Gagal memuat detector: {e}")
                 return
 
             self.classifier, _ = get_classifier_model()
@@ -284,15 +284,15 @@ class CameraDetectApp:
             has_tol = any("golongan" in str(v).lower() for v in getattr(self.detector, 'names', {}).values())
 
             if has_tol:
-                mode_txt = "✅ Model YOLOv8 Terlatih (Golongan I - VI)"
+                mode_txt = "Model YOLOv8 Terlatih (Golongan I - VI)"
                 mode_color = SUCCESS
             else:
-                mode_txt = "ℹ️  Mode Default YOLOv8 (COCO Mode)"
+                mode_txt = "Mode Default YOLOv8 (COCO Mode)"
                 mode_color = ACCENT
 
             self.root.after(0, lambda: self.lbl_mode.config(text=mode_txt, fg=mode_color))
             self.root.after(0, lambda: self.btn_capture.config(state=tk.NORMAL))
-            self._set_status("✅ Model siap. Tekan SPASI atau [📸 Ambil & Deteksi Foto] untuk capture.")
+            self._set_status("Model siap. Tekan SPASI atau [Ambil & Deteksi Foto] untuk capture.")
 
         threading.Thread(target=_load, daemon=True).start()
 
@@ -302,7 +302,7 @@ class CameraDetectApp:
     def _start_camera(self):
         self.cap = cv2.VideoCapture(self.camera_index)
         if not self.cap.isOpened():
-            self._set_status("❌ Kamera tidak dapat dibuka. Pastikan kamera tersambung.")
+            self._set_status("[!] Kamera tidak dapat dibuka. Pastikan kamera tersambung.")
             return
         self.running = True
         threading.Thread(target=self._camera_loop, daemon=True).start()
@@ -357,11 +357,11 @@ class CameraDetectApp:
     def request_capture(self):
         """Dipanggil saat user menekan tombol atau SPASI."""
         if self.detector is None:
-            self._set_status("⚠️ Model belum selesai dimuat, harap tunggu.")
+            self._set_status("[!] Model belum selesai dimuat, harap tunggu.")
             return
         self.capture_requested = True
-        self._set_status("📸 Mengambil foto & menjalankan deteksi...")
-        self.btn_capture.config(state=tk.DISABLED, text="⏳  Mendeteksi...")
+        self._set_status("Mengambil foto & menjalankan deteksi...")
+        self.btn_capture.config(state=tk.DISABLED, text="Mendeteksi...")
 
     def _process_capture(self, frame):
         """Proses deteksi pada frame yang di-capture (berjalan di thread kamera)."""
@@ -369,16 +369,15 @@ class CameraDetectApp:
             result = draw_vehicle_boxes(self.detector, self.classifier, frame.copy(), conf=0.15)
             self.result_frame = result.copy()
 
-            # Kumpulkan statistik dari hasil overlay (parse teks header sudah ada di result frame)
-            # Deteksi ulang untuk mendapat stats dict
+            # Kumpulkan statistik dari hasil overlay
             stats = self._get_stats(frame)
 
             # Update UI di main thread
             self.root.after(0, lambda: self._update_result_ui(result, stats))
         except Exception as e:
-            self.root.after(0, lambda: self._set_status(f"❌ Error saat deteksi: {e}"))
+            self.root.after(0, lambda: self._set_status(f"[!] Error saat deteksi: {e}"))
             self.root.after(0, lambda: self.btn_capture.config(
-                state=tk.NORMAL, text="📸  Ambil & Deteksi Foto"))
+                state=tk.NORMAL, text="Ambil & Deteksi Foto"))
 
     def _get_stats(self, frame):
         """Jalankan deteksi untuk mendapat statistik golongan (mendukung model custom dan COCO)."""
@@ -430,20 +429,20 @@ class CameraDetectApp:
             top_cnt = stats[top_gol]
             desc    = GOLONGAN_DESC.get(top_gol, "")
             hex_col = GOLONGAN_HEX.get(top_gol, ACCENT)
-            detail_txt = f"🏆  {top_gol}  ({top_cnt} kendaraan)   ·   {desc}"
+            detail_txt = f"{top_gol} ({top_cnt} kendaraan) - {desc}"
             self.lbl_result_detail.config(text=detail_txt, fg=hex_col)
             self._set_status(
-                f"✅ Ditemukan {total} kendaraan. "
-                f"Terbanyak: {top_gol} ({top_cnt} unit) — {desc}"
+                f"Ditemukan {total} kendaraan. "
+                f"Terbanyak: {top_gol} ({top_cnt} unit) - {desc}"
             )
         else:
-            self.lbl_result_detail.config(text="⚠️  Tidak ada kendaraan terdeteksi dalam foto ini.", fg=WARNING)
-            self._set_status("⚠️  Tidak ada kendaraan terdeteksi. Coba arahkan kamera ke kendaraan.")
+            self.lbl_result_detail.config(text="Tidak ada kendaraan terdeteksi dalam foto ini.", fg=WARNING)
+            self._set_status("Tidak ada kendaraan terdeteksi. Coba arahkan kamera ke kendaraan.")
 
         # Auto-save
         self._auto_save(result_frame)
 
-        self.btn_capture.config(state=tk.NORMAL, text="📸  Ambil & Deteksi Foto")
+        self.btn_capture.config(state=tk.NORMAL, text="Ambil & Deteksi Foto")
         self.btn_save.config(state=tk.NORMAL)
 
     # ------------------------------------------------------------------
@@ -475,7 +474,7 @@ class CameraDetectApp:
         )
         if path:
             cv2.imwrite(path, self.result_frame)
-            self._set_status(f"💾 Berhasil disimpan: {path}")
+            self._set_status(f"[+] Berhasil disimpan: {path}")
             messagebox.showinfo("Simpan Berhasil", f"Hasil deteksi disimpan ke:\n{path}")
 
     # ------------------------------------------------------------------
@@ -497,7 +496,6 @@ class CameraDetectApp:
 # ---------------------------------------------------------------------------
 def launch_camera_detect(camera_index: int = 0):
     """Buka jendela Deteksi Kendaraan via Foto Kamera."""
-    # Cek ketersediaan Pillow
     try:
         import PIL
     except ImportError:

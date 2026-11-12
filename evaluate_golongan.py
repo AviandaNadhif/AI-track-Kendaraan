@@ -28,6 +28,7 @@ from PIL import Image
 
 from Track import (get_detector_model, normalize_golongan_name,
                    filter_colliding_boxes, CLASSES)
+from ultralytics import YOLO
 
 EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp", ".avif")
 CONF = 0.15
@@ -86,6 +87,7 @@ def main():
     ap.add_argument("--out_dir", default=None, help="Folder hasil uji (default: Hasil_Uji di folder script)")
     ap.add_argument("--device", default=None, help="cpu / 0 (GPU). Default: otomatis")
     ap.add_argument("--val", action="store_true", help="jalankan juga model.val() pada data.yaml")
+    ap.add_argument("--model", default=None, help="Path model .pt eksplisit (default: runs/best.pt -> runs/train/weights/best.pt -> yolov8s.pt)")
     a = ap.parse_args()
 
     # Resolusi path test_dir secara absolut & otomatis mendeteksi folder script
@@ -120,6 +122,34 @@ def main():
     print(f"[+] Direktori Output Hasil: {out_dir}")
 
     detector = get_detector_model()
+    # Override model jika --model diberikan, atau cari runs/best.pt secara otomatis
+    if a.model:
+        model_path = a.model if os.path.isabs(a.model) else os.path.join(BASE_DIR, a.model)
+        if os.path.exists(model_path):
+            print(f"[+] Memuat model dari argumen: {model_path}")
+            detector = YOLO(model_path)
+        else:
+            print(f"[!] Model tidak ditemukan: {model_path}, menggunakan model default.")
+    else:
+        # Cari best.pt secara otomatis: runs/best.pt -> runs/train*/weights/best.pt -> yolov8s.pt
+        candidates = [
+            os.path.join(BASE_DIR, "runs", "best.pt"),
+        ]
+        # Cari semua subfolder runs/train*/weights/best.pt (terbaru dulu)
+        runs_dir = os.path.join(BASE_DIR, "runs")
+        if os.path.exists(runs_dir):
+            subdirs = sorted(
+                [d for d in os.listdir(runs_dir) if d.startswith("train")],
+                reverse=True
+            )
+            for sub in subdirs:
+                candidates.append(os.path.join(runs_dir, sub, "weights", "best.pt"))
+        candidates.append(os.path.join(BASE_DIR, "yolov8s.pt"))
+        for cand in candidates:
+            if os.path.exists(cand):
+                print(f"[+] Memuat model: {cand}")
+                detector = YOLO(cand)
+                break
     device = a.device if a.device is not None else (0 if __import__("torch").cuda.is_available() else "cpu")
     if isinstance(device, str) and device.isdigit():
         device = int(device)
