@@ -620,7 +620,7 @@ def show_gui():
     root.geometry("700x260")
     root.eval('tk::PlaceWindow . center')
 
-    tk.Label(root, text="🚗 AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
+    tk.Label(root, text="AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
 
     # ── Pilihan Model ─────────────────────────────────────────────
     mode_frame = tk.LabelFrame(root, text=" Pilihan Model AI ", font=("Arial", 9, "bold"), fg="#1976D2")
