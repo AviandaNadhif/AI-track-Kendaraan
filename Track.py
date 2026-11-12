@@ -134,20 +134,20 @@ def get_classifier_model():
     """Deteksi dan klasifikasi Golongan I - VI terintegrasi langsung pada model YOLOv8."""
     return None, None
 
-def get_detector_model(model_mode="default"):
+def get_detector_model(model_mode="auto"):
     """
     Load model detektor YOLOv8:
     model_mode:
-      - 'default' / 'base' / 'coco' : Menggunakan model default di folder coco_model/ (yolov8s.pt).
+      - 'auto'   : Cek runs/best.pt, jika tidak ada fallback ke model standar COCO.
       - 'custom' : Menggunakan runs/best.pt hasil training lokal (dilengkapi COCO fallback).
-      - 'auto'   : Menggunakan model default di folder coco_model/ sebagai prioritas utama.
+      - 'base'   : Menggunakan yolov8s.pt / yolov8n.pt pretrained COCO (mendeteksi multi-kendaraan dengan presisi tinggi).
     """
     root_dir = os.path.dirname(os.path.abspath(__file__))
     coco_dir = os.path.join(root_dir, "coco_model")
 
-    # 1. JIKA MENGGUNAKAN MODE DEFAULT / BASE / COCO / AUTO
-    if model_mode in ["default", "base", "coco", "auto"]:
-        cand_default = [
+    # 1. JIKA USER MEMILIH MODEL BASE / STANDAR SECARA EKSPLISIT
+    if model_mode in ["base", "coco", "default"]:
+        cand_base = [
             os.path.join(coco_dir, "yolov8s.pt"),
             os.path.join(coco_dir, "yolov8n.pt"),
             os.path.join(coco_dir, "best.pt"),
@@ -156,12 +156,12 @@ def get_detector_model(model_mode="default"):
             "yolov8s.pt",
             "yolov8n.pt"
         ]
-        for cp in cand_default:
+        for cp in cand_base:
             if os.path.exists(cp):
                 try:
                     m = YOLO(cp)
                     if 'motorcycle' in m.names.values():
-                        print(f"[+] Loaded Model Default dari coco_model: {cp}")
+                        print(f"[+] Loaded Model Dasar Pretrained COCO (Multi-Vehicle): {cp}")
                         return m
                 except Exception:
                     pass
@@ -171,7 +171,7 @@ def get_detector_model(model_mode="default"):
             return YOLO("yolov8n.pt")
 
     # 2. PRIORITAS CUSTOM (runs/best.pt)
-    if model_mode in ["custom"]:
+    if model_mode in ["auto", "custom"]:
         runs_dir = os.path.join(root_dir, "runs")
         if os.path.exists(runs_dir):
             best_files = []
@@ -200,19 +200,11 @@ def get_detector_model(model_mode="default"):
             except Exception as e:
                 print(f"[!] Gagal me-load best.pt dari root: {e}")
 
-        root_custom_s = os.path.join(root_dir, "yolov8s.pt")
-        if os.path.exists(root_custom_s):
-            try:
-                m = YOLO(root_custom_s)
-                print(f"[+] Loaded Model Custom yolov8s dari root: {root_custom_s}")
-                return m
-            except Exception:
-                pass
-
-    # Fallback ke model dasar di coco_model/
+    # Fallback ke model dasar pretrained COCO
     cand_fb = [
         os.path.join(coco_dir, "yolov8s.pt"),
         os.path.join(coco_dir, "yolov8n.pt"),
+        os.path.join(coco_dir, "best.pt"),
         os.path.join(root_dir, "yolov8s.pt"),
         "yolov8s.pt"
     ]
@@ -220,8 +212,9 @@ def get_detector_model(model_mode="default"):
         if os.path.exists(cp):
             try:
                 m = YOLO(cp)
-                print(f"[+] Loaded Model Fallback (coco_model): {cp}")
-                return m
+                if 'motorcycle' in m.names.values():
+                    print(f"[+] Loaded Detector Model (COCO Fallback): {cp}")
+                    return m
             except Exception:
                 pass
 
@@ -256,12 +249,17 @@ def filter_colliding_boxes(detections, overlap_threshold=0.60):
     Saring HANYA duplikasi prediksi dari KENDARAAN YANG SAMA (IoU tinggi).
     Mempertahankan kendaraan berbeda yang saling berdekatan, beriringan, atau di lajur berbeda
     sehingga sistem dapat mendeteksi banyak kendaraan sekaligus (multi-vehicle detection).
+    Prioritaskan deteksi Golongan III - V agar tidak tertindih oleh deteksi model COCO default.
     """
     if not detections:
         return []
 
-    # Urutkan berdasarkan confidence tertinggi
-    sorted_dets = sorted(detections, key=lambda d: d["conf"], reverse=True)
+    # Beri prioritas tertinggi untuk deteksi Custom Model Golongan III - V agar tidak tertelan box COCO
+    def sort_key(d):
+        is_custom_heavy = 1 if (d.get("source") == "custom" and d.get("golongan_name") in ("Golongan III", "Golongan IV", "Golongan V")) else 0
+        return (is_custom_heavy, d.get("conf", 0.0))
+
+    sorted_dets = sorted(detections, key=sort_key, reverse=True)
     kept_dets = []
 
     for det in sorted_dets:
@@ -269,6 +267,13 @@ def filter_colliding_boxes(detections, overlap_threshold=0.60):
         is_duplicate = False
         for kept in kept_dets:
             iou, iomin = calculate_box_overlap(box, kept["box"])
+            # Jika objek yang sudah disimpan adalah Golongan III - V dari custom model,
+            # jangan biarkan box COCO default menindih
+            if kept.get("golongan_name") in ("Golongan III", "Golongan IV", "Golongan V") and det.get("source") == "coco_fallback":
+                if iou >= 0.15 or iomin >= 0.20:
+                    is_duplicate = True
+                    break
+
             # Hanya eliminasi jika dua box adalah duplikat dari kendaraan yang sama (IoU tinggi)
             # ATAU jika satu box kecil hampir tertelan seluruhnya di dalam box besar dengan kelas yang sama
             if iou >= overlap_threshold or (det["golongan_name"] == kept["golongan_name"] and iomin >= 0.88):
@@ -385,7 +390,7 @@ def draw_vehicle_boxes(detector, classifier, frame, conf=0.15, overlap_threshold
                 "source": "custom" if is_custom_model else "coco"
             })
 
-    # --- FALLBACK KE COCO KHUSUS GOLONGAN VI & SCAN BANYAK KENDARAAN ---
+    # ── FALLBACK KE COCO KHUSUS GOLONGAN VI & SCAN BANYAK KENDARAAN ──────
     # Jika menggunakan Model Custom, aktifkan fallback ke COCO pretrained:
     # 1. Golongan VI (sepeda motor / roda 2) digantikan atau ditambahkan dari COCO
     #    agar bounding box rapi & presisi seperti di v4.
@@ -411,6 +416,17 @@ def draw_vehicle_boxes(detector, classifier, frame, conf=0.15, overlap_threshold
                     b_box = (bx1, by1, bx2, by2)
 
                     if c_gol == "Golongan VI":
+                        # Cegah COCO Golongan VI menindih area truk Golongan III - V
+                        overlap_g3_5 = False
+                        for cand in candidates:
+                            if cand.get("golongan_name") in ("Golongan III", "Golongan IV", "Golongan V"):
+                                iou, iomin = calculate_box_overlap(b_box, cand["box"])
+                                if iou >= 0.20 or iomin >= 0.35:
+                                    overlap_g3_5 = True
+                                    break
+                        if overlap_g3_5:
+                            continue
+
                         # Khusus Golongan VI: Gantikan deteksi custom yang tumpang tindih
                         # dengan bounding box COCO yang lebih presisi, atau tambahkan jika belum ada.
                         replaced = False
@@ -434,10 +450,16 @@ def draw_vehicle_boxes(detector, classifier, frame, conf=0.15, overlap_threshold
                             })
                     else:
                         # Kendaraan lain (Golongan I / II): tambahkan jika belum terdeteksi oleh custom
+                        # JANGAN pernah tindih jika area tersebut sudah terdeteksi Golongan III, IV, atau V
                         overlap = False
                         for cand in candidates:
-                            iou, _ = calculate_box_overlap(b_box, cand["box"])
-                            if iou >= 0.40:
+                            iou, iomin = calculate_box_overlap(b_box, cand["box"])
+                            # Jika area sudah terdeteksi Golongan III - V, tolak box COCO default
+                            if cand.get("golongan_name") in ("Golongan III", "Golongan IV", "Golongan V"):
+                                if iou >= 0.15 or iomin >= 0.20:
+                                    overlap = True
+                                    break
+                            elif iou >= 0.40:
                                 overlap = True
                                 break
                         if not overlap:
@@ -495,7 +517,7 @@ def draw_header_overlay(frame, stats, is_custom_model=False):
     cv2.addWeighted(overlay, 0.75, frame, 0.25, 0, frame)
 
     total_count = sum(stats.values())
-    status_str = "Model Custom (+ COCO Fallback Gol VI)" if is_custom_model else "Model Default (coco_model/yolov8s.pt)"
+    status_str = "Model Custom" if is_custom_model else "Model YOLOv8 Default (COCO Mode)"
 
     # Header Bar Row 1: Total & Status Mode
     title_txt = f"TOTAL DETEKSI: {total_count} Kendaraan | Mode: {status_str}"
@@ -510,7 +532,7 @@ def draw_header_overlay(frame, stats, is_custom_model=False):
     summary_txt = " | ".join(summary_parts)
     cv2.putText(frame, summary_txt, (10, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
-def process_video(source, save_output=False, model_mode="default"):
+def process_video(source, save_output=False, model_mode="auto"):
     """Proses deteksi & tracking kendaraan pada Video / Kamera live."""
     detector = get_detector_model(model_mode=model_mode)
     classifier, model_path = get_classifier_model()
@@ -558,7 +580,7 @@ def process_video(source, save_output=False, model_mode="default"):
         writer.release()
     cv2.destroyAllWindows()
 
-def process_image(image_paths, save_output=True, model_mode="default"):
+def process_image(image_paths, save_output=True, model_mode="auto"):
     """Proses deteksi & tracking kendaraan pada satu atau beberapa Foto."""
     detector = get_detector_model(model_mode=model_mode)
     classifier, model_path = get_classifier_model()
@@ -598,23 +620,23 @@ def show_gui():
     root.geometry("700x260")
     root.eval('tk::PlaceWindow . center')
 
-    tk.Label(root, text="AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
+    tk.Label(root, text="🚗 AI Track Kendaraan Indonesia (Golongan I - VI)", font=("Arial", 12, "bold")).pack(pady=10)
 
-    # --- Pilihan Model ---
+    # ── Pilihan Model ─────────────────────────────────────────────
     mode_frame = tk.LabelFrame(root, text=" Pilihan Model AI ", font=("Arial", 9, "bold"), fg="#1976D2")
     mode_frame.pack(pady=4, padx=20, fill=tk.X)
 
-    model_var = tk.StringVar(value="default")
+    model_var = tk.StringVar(value="base")
     r1 = tk.Radiobutton(
         mode_frame,
-        text="Model Default (coco_model/yolov8s.pt - Deteksi Banyak Kendaraan Presisi COCO)",
-        variable=model_var, value="default", font=("Arial", 9, "bold"), fg="#2E7D32"
+        text="Model Standar YOLO (coco_model/yolov8s.pt - Default COCO)",
+        variable=model_var, value="base", font=("Arial", 9, "bold"), fg="#2E7D32"
     )
     r1.pack(anchor=tk.W, padx=12, pady=2)
 
     r2 = tk.Radiobutton(
         mode_frame,
-        text="Model Custom Tol (runs/best.pt - Hasil Training Mandiri + COCO Fallback Golongan VI)",
+        text="Model Custom Tol (runs/best.pt - Hasil Training Mandiri dan COCO Fallback Golongan VI)",
         variable=model_var, value="custom", font=("Arial", 9)
     )
     r2.pack(anchor=tk.W, padx=12, pady=2)
